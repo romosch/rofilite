@@ -1,4 +1,4 @@
-package rolfilite
+package rofilite
 
 import (
 	"fmt"
@@ -12,14 +12,15 @@ import (
 )
 
 type RollingFile struct {
-	maxBackups   int
-	maxSize      int64
-	maxAge       time.Duration
-	file         *os.File
-	size         int64
-	mode         os.FileMode
-	errorHandler func(error)
-	cleanupMutex sync.Mutex
+	maxBackups       int
+	maxSize          int64
+	maxAge           time.Duration
+	file             *os.File
+	size             int64
+	mode             os.FileMode
+	errorHandler     func(error)
+	cleanupMutex     sync.Mutex
+	cleanupWaitGroup sync.WaitGroup
 }
 
 func (l *RollingFile) Write(line []byte) (n int, err error) {
@@ -77,13 +78,14 @@ func (l *RollingFile) rotate() error {
 	}
 	l.file = newFile
 	l.size = 0
-
+	l.cleanupWaitGroup.Add(1)
 	go l.cleanupBackups()
 	return nil
 }
 
-// cleanupBackups deletes oldest backup files to enforce the maxBackups limit.
+// cleanupBackups deletes oldest backup files to enforce the maxBackups and maxAge limits.
 func (l *RollingFile) cleanupBackups() {
+	defer l.cleanupWaitGroup.Done()
 	l.cleanupMutex.Lock()
 	defer l.cleanupMutex.Unlock()
 	matches, err := filepath.Glob(l.file.Name() + ".*")
@@ -136,8 +138,10 @@ func (l *RollingFile) isOlderThanFilename(fname string) (bool, error) {
 	return ts.Before(cutoff), nil
 }
 
-// Close calls the Close function on the underlying file.
+// Close waits for pending backup cleanup to finish and
+// calls the Close function on the underlying file.
 func (l *RollingFile) Close() error {
+	l.cleanupWaitGroup.Wait()
 	return l.file.Close()
 }
 

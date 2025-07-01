@@ -1,4 +1,4 @@
-package rolfilite
+package rofilite
 
 import (
 	"bytes"
@@ -116,6 +116,8 @@ func TestMaxBackupsIsEnforced(t *testing.T) {
 		_, err := logger.Write([]byte(msg))
 		assert.NoError(t, err)
 	}
+	err = logger.Close()
+	assert.NoError(t, err)
 
 	files, err := filepath.Glob(logPath + ".*")
 	assert.NoError(t, err)
