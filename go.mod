@@ -1,4 +1,4 @@
-module github.com/romosch/rofilite
+module github.com/romosch/rollingfile
 
 go 1.24.3
 

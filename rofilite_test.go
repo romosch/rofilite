@@ -1,4 +1,4 @@
-package rofilite
+package rollingfile
 
 import (
 	"bytes"
