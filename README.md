@@ -1,12 +1,16 @@
-# Rofilite
+# rofilite
 
-Lightweight Rolling File for Go
+Rolling File (Light) for Go
 
 ## Overview
-Rofilite is a lightweight rolling file library for Go, designed to provide minimal overhead while managing rotating files efficiently. It is ideal for applications that require simple and effective file rotation without the complexity or overhead of larger libraries.
+rofilite is a lightweight rolling file library for Go, designed to incur minimal overhead while managing rotating files. It is ideal for applications that require simple and effective file rotation without the complexity or overhead of larger libraries.
 
-## Caveat
-To reduce system calls, the writer keeps track of the number written bytes to omit checking filesize on every write. The rotation will only occurr after the number of written bytes (not the filesize) has reached the limit. Assuming only one process is writing to the file, this should not be an issue.
+## Features
+## Minimal System Calls
+Unlike other libraries, the writer keeps track of the number written bytes to omit checking filesize on every write. The rotation will only occurr after the number of written bytes (not the current filesize) has reached the limit. This parts from the assumption only one process/goroutine will be writing to the file, reducing synchronization overhead.
+
+### Non-blocking Cleanup 
+The cleanup of backup files (according to values defined in `WithMaxAge` or `WithMaxBackups`) is performed in an additional goroutine to reduce the time a call to `Write` waits for a file-rotation to complete. Errors occurring during cleanup can be handled by a custom function passed via the `WithErrorHandler` option
 
 ## Installation
 To install Rofilite, use the following command:
